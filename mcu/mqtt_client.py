@@ -1,9 +1,10 @@
-import umqtt.robust
+import umqtt.simple
+import time
 
 class MQTTManager:
     def __init__(self, client_id, server, port=1883, user="", password="", keepalive=60, ssl=False):
             self.online = False
-            self.client = umqtt.robust.MQTTClient(
+            self.client = umqtt.simple.MQTTClient(
                 client_id=client_id,
                 server=server,
                 port=port,
@@ -30,9 +31,9 @@ class MQTTManager:
         self.online = False
 
     def publish(self, topic, msg, retain=False, qos=0):
+        if not self.online:  return False
         try:
             self.client.publish(topic, msg, retain, qos)
-            self.online = True
             return True
         except Exception:
             self.online = False
@@ -43,6 +44,7 @@ class MQTTManager:
             self.client.subscribe(topic, qos)
             return True
         except Exception:
+            self.online = False
             return False
 
     def unsubscribe(self, topic, qos=0):
@@ -50,6 +52,7 @@ class MQTTManager:
             self.client.unsubscribe(topic)
             return True
         except Exception:
+            self.online = False
             return False
 
     def set_callback(self, func):
@@ -61,7 +64,6 @@ class MQTTManager:
     def check_msg(self):
         try:
             self.client.check_msg()
-            self.online = True
             return True
         except Exception:
             self.online = False
@@ -70,7 +72,6 @@ class MQTTManager:
     def ping(self):
         try:
             self.client.ping()
-            self.online = True
             return True
         except Exception:
             self.online = False
